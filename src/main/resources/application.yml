@@ -1,0 +1,36 @@
+server:
+  port: 8080
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+gateway:
+  apps:
+    tenant-security-api:
+      uri: http://localhost:8446
+      name: tenant-security
+      resource: tenant-security
+    tenant-settings-api:
+      uri: http://localhost:8447
+      name: tenant-settings
+      resource: tenant-settings
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: dynamicDeviceRewrite
+          uri: ${gateway.apps.tenant-settings-api.uri}
+          predicates:
+            - Path=/v1/settings-api/devices
+          filters:
+            - RewritePath=/v1/settings-api/devices, /
+
+        - id: dynamicUnitRoute
+          uri: ${gateway.apps.tenant-settings-api.uri}
+          predicates:
+            - Path=/v1/settings-api/units
+          filters:
+            - name: DynamicForward
+              args:
+                url: http://gola.com
+                status: 200
+
